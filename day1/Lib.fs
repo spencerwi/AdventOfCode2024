@@ -3,11 +3,11 @@ open System
 
 module Puzzle = begin
     let parseLists (input: string seq) : (int list * int list) =
-            input
-            |> Seq.map (fun s -> s.Split([|' '|], StringSplitOptions.RemoveEmptyEntries) )
-            |> Seq.map (fun [|a;b|] -> (int a, int b))
-            |> List.ofSeq
-            |> List.unzip
+        input 
+        |> Seq.map (fun line -> line.Split([|' '|], StringSplitOptions.RemoveEmptyEntries))
+        |> Seq.map (fun [|a;b|] -> (int a, int b))
+        |> List.ofSeq
+        |> List.unzip
 
 
     let distanceBetween a b =
@@ -29,12 +29,9 @@ module Puzzle = begin
             |> Map.ofSeq
         in
         let similarityScore x =
-            let count = 
-                list2Occurrences.TryFind x
-                |> Option.defaultValue 0
-            in
-            x * count
+            match list2Occurrences.TryFind x with
+            | Some count -> x * count
+            | None -> 0
         in
-        list1 
-        |> Seq.sumBy similarityScore
+        Seq.sumBy similarityScore list1
 end

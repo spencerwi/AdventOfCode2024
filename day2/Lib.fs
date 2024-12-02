@@ -6,18 +6,18 @@ module Puzzle = begin
         min : int
         max : int
     } with
-        member this.contains x =
+        member this.allows x =
             this.min <= x && x <= this.max
 
     type Direction = 
         | Increasing 
         | Decreasing
         | Same
-
-    type SafetyResult =
-        | Safe
-        | SafeIfOneMistakeAllowed
-        | Unsafe
+    with 
+        static member ofDiff (difference : int) : Direction =
+            if difference > 0 then Increasing
+            elif difference < 0 then Decreasing
+            else Same
 
     type Report = {
         levels : int list
@@ -30,50 +30,59 @@ module Puzzle = begin
             in
             { levels = levels }
 
+        /// <returns>
+        /// A new <c>Report</c> that's a copy of this one with the level reading
+        ///  at <c>idx</c> removed
+        /// </returns>
         member this.withoutIndex idx : Report =
-            {
-                levels = List.removeAt idx this.levels
-            }
+            { levels = List.removeAt idx this.levels }
 
+        /// <returns>
+        /// A <c>Seq</c> containing all possible variations of this 
+        ///  <c>Report</c> if you were to remove one single level reading
+        /// </returns>
         member this.variations () : Report seq =
             seq {
                 for idx in 0 .. (this.levels.Length - 1) do
                     yield this.withoutIndex idx
             }
 
+        member this.isMonotonic() : bool =
+            let directionOfFirstStep = Direction.ofDiff (this.levels[1] - this.levels[0]) in
+            this.levels
+            |> Seq.pairwise
+            |> Seq.forall (fun (current, next) -> 
+                let directionOfThisStep = (Direction.ofDiff (next - current)) in
+                directionOfThisStep = directionOfFirstStep
+            )
+
+        member this.stepsAreTolerable (toleranceRange : ToleranceRange) : bool =
+            this.levels
+            |> Seq.pairwise
+            |> Seq.forall (fun (current, next) ->
+                let difference = abs (next - current) in
+                toleranceRange.allows difference
+            )
+
+    type SafetyResult =
+        | Safe
+        | SafeIfOneMistakeAllowed
+        | Unsafe
 
     let checkSafety (toleranceRange : ToleranceRange) (report: Report) : SafetyResult = 
-        let reportIsSafe (report : Report) =
-            let steps = seq {
-                for (current, next) in Seq.pairwise report.levels do
-                    let difference = next - current in
-                    let direction = 
-                        if difference > 0 then Increasing
-                        elif difference < 0 then Decreasing
-                        else Same
-                    in
-                    yield (direction, abs difference)
-            }
-            let (initialDirection, _) = Seq.head steps in
-            let stepIsSafe (stepDirection, stepDifference) = 
-                stepDirection = initialDirection &&
-                toleranceRange.contains stepDifference
-            in
-            Seq.forall stepIsSafe steps
+        let isSafe (report : Report) =
+            report.isMonotonic() && report.stepsAreTolerable toleranceRange
         in
-        if (reportIsSafe report) then
+        if (isSafe report) then
             Safe
+        elif Seq.exists isSafe (report.variations()) then
+            SafeIfOneMistakeAllowed
         else
-            let isSafeIfOneMistakeIsRemoved =
-                report.variations()
-                |> Seq.exists (fun variation -> reportIsSafe variation)
-            in
-            if isSafeIfOneMistakeIsRemoved then
-                SafeIfOneMistakeAllowed
-            else
-                Unsafe
+            Unsafe
 
+    /// <summary>
     /// Just for a convenient, readable fold in the solve method
+    /// </summary>
     type PuzzleCounter = {
         part1 : int
         part2 : int
@@ -92,8 +101,6 @@ module Puzzle = begin
                 | SafeIfOneMistakeAllowed -> 
                     { counter with part2 = counter.part2 + 1 }                
                 | Unsafe -> counter
-
-
 
     let solve (toleranceRange : ToleranceRange) (reports : Report seq) =
         reports 

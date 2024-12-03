@@ -9,6 +9,7 @@ let read_stdin_lines () : string =
 [<EntryPoint>]
 let main args =
     let input = read_stdin_lines() in
-    printfn "Part 1: %A" (Puzzle.part1 input);
-    printfn "Part 2: %A" (Puzzle.part2 input);
+    let commands = Puzzle.parseCommands input
+    printfn "Part 1: %A" (Puzzle.part1 commands);
+    printfn "Part 2: %A" (Puzzle.part2 commands);
     0

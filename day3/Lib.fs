@@ -33,7 +33,6 @@ module Puzzle = begin
             {state with sum = state.sum + (a * b)}
         | _ -> state
 
-
     let parseCommands (input : string) : Command seq =
         let disableRegex = @"don't\(\)" in 
         let enableRegex = @"do\(\)" in

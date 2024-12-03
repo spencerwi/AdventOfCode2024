@@ -9,6 +9,9 @@ module Puzzle = begin
         member this.allows x =
             this.min <= x && x <= this.max
 
+        static member Default = 
+            { min = 1; max = 3}
+
     type Direction = 
         | Increasing 
         | Decreasing

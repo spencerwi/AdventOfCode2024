@@ -41,17 +41,13 @@ type ``Tests for Report`` ()=
 
     [<Test>]
     member _.``It should report safety properly`` ()=
-        let toleranceRange = {
-            min = 1
-            max = 3
-        } in
         let expected = [
             Safe; Unsafe; Unsafe; SafeIfOneMistakeAllowed; SafeIfOneMistakeAllowed; Safe
         ] in
         let actual = 
             sample_input 
             |> Seq.map Report.parse 
-            |> Seq.map (checkSafety toleranceRange)
+            |> Seq.map (checkSafety ToleranceRange.Default)
         in
         actual |> should equal expected
 
@@ -61,7 +57,7 @@ type ``Tests for solution`` ()=
         sample_input 
         |> Seq.map Report.parse
         |> List.ofSeq
-    let toleranceRange = {min = 1; max = 3}
+    let toleranceRange = ToleranceRange.Default
 
     [<Test>]
     member _.``It should solve part 1`` ()=

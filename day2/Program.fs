@@ -9,7 +9,7 @@ let read_stdin_lines () : string array =
 [<EntryPoint>]
 let main args =
     let input = read_stdin_lines() in
-    let toleranceRange = {min = 1; max = 3} in
+    let toleranceRange = ToleranceRange.Default in
     let reports = 
         input
         |> Seq.map Report.parse

@@ -64,20 +64,26 @@ type ``Tests for solution`` ()=
         let grid = Grid.parse sample_input in
         let topLeftCorner = {row = 0; col = 0} in
         let bottomRightCorner = {row = grid.height - 1; col = grid.width - 1} in
-        grid.castRay topLeftCorner UP
-        |> should equalSeq [grid[topLeftCorner]]
-        grid.castRay topLeftCorner UP_LEFT
-        |> should equalSeq [grid[topLeftCorner]]
-        grid.castRay topLeftCorner LEFT
-        |> should equalSeq [grid[topLeftCorner]]
+        grid.castRay 100 topLeftCorner UP
+        |> should equalSeq [grid[topLeftCorner]];
+        grid.castRay 100 topLeftCorner UP_LEFT
+        |> should equalSeq [grid[topLeftCorner]];
+        grid.castRay 100 topLeftCorner LEFT
+        |> should equalSeq [grid[topLeftCorner]];
         let firstRow = List.ofArray (grid.cells[0, 0..]) in
-        grid.castRay topLeftCorner RIGHT
-        |> should equalSeq firstRow
-        grid.castRay topLeftCorner DOWN_RIGHT 
-        |> should equal (
-            grid.castRay bottomRightCorner UP_LEFT
+        grid.castRay 100 topLeftCorner RIGHT
+        |> should equalSeq firstRow;
+        grid.castRay 100 topLeftCorner DOWN_RIGHT 
+        |> should equalSeq (
+            grid.castRay 100 bottomRightCorner UP_LEFT
             |> List.rev
-        )
+        );
+        grid.castRay 3 topLeftCorner DOWN_RIGHT 
+        |> should equalSeq [
+            grid[topLeftCorner]; 
+            grid[topLeftCorner.step DOWN_RIGHT];
+            grid[(topLeftCorner.step DOWN_RIGHT).step DOWN_RIGHT]
+        ]
 
 
     [<Test>]

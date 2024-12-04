@@ -11,6 +11,7 @@ module Puzzle = begin
     let isMas = 
         function 
         | 'M'::'A'::'S'::_ -> true
+        | 'S'::'A'::'M'::_ -> true
         | _ -> false
 
     type Direction =
@@ -59,6 +60,11 @@ module Puzzle = begin
 
         member this.height = Array2D.length1 this.cells
         member this.width = Array2D.length2 this.cells
+        member this.allPoints = seq {
+            for row in 0..(this.height - 1) do
+                for col in 0..(this.width - 1) do
+                    yield {row = row; col = col}
+        }
 
         member this.contains (point : Point) : bool =
             point.row >= 0 && 
@@ -66,45 +72,40 @@ module Puzzle = begin
             point.col >= 0 &&
             point.col < this.width
 
-        member this.castRay (point : Point) (direction : Direction) : char list =
+        member this.castRay (length : int) (point : Point) (direction : Direction) : char list =
             [
-                let mutable current = point
-                while this.contains current do
+                let mutable current = point in
+                let mutable stepCount = 1 in
+                while this.contains current && stepCount <= length do
                     yield this[current]
                     current <- current.step direction
+                    stepCount <- stepCount + 1
             ]
 
         member this.find (target : char) : seq<Point> =
-            seq {
-                for row in 0 .. this.height - 1 do
-                    for col in 0 .. this.width - 1 do
-                        if this.cells[row, col] = target then 
-                            yield {row = row; col = col}
-            }
+            this.allPoints
+            |> Seq.filter (fun point -> this[point] = target)
 
         member this.countXmasesFromX (point : Point) =
             if (this[point] <> 'X') then 0
             else
                 Direction.values
-                |> Seq.map (this.castRay point)
+                |> Seq.map (this.castRay 4 point)
                 |> Seq.filter isXmas
                 |> Seq.length
 
         member this.isXShapedMasFromA (point : Point) =
             if (this[point] <> 'A') then false
             else 
-                let diagonalMasOptions = [
-                    this.castRay (point.step UP_LEFT) DOWN_RIGHT;
-                    this.castRay (point.step UP_RIGHT) DOWN_LEFT;
-                    this.castRay (point.step DOWN_LEFT) UP_RIGHT;
-                    this.castRay (point.step DOWN_RIGHT) UP_LEFT;
-                ] in
-                let numberOfMases = 
-                    diagonalMasOptions
-                    |> Seq.filter isMas
-                    |> Seq.length
-                in
-                numberOfMases >= 2
+                query {
+                    let raysToCast = [ 
+                        ((point.step UP_LEFT), DOWN_RIGHT);
+                        ((point.step UP_RIGHT), DOWN_LEFT)
+                    ] in
+                    for (origin, direction) in raysToCast do
+                    let ray = (this.castRay 3 origin direction) in
+                    all (isMas ray)
+                }
 
     let part1 (grid : Grid) =
         grid.find 'X'

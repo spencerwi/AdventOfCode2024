@@ -16,24 +16,24 @@ module Puzzle = begin
                 { before = before; after = after }
 
     type PageUpdate = {
-        pages : int list
+        pages : int array
     }
         with 
             static member parse (line : string) : PageUpdate =
                 let pages = 
                     line.Split([|','|], StringSplitOptions.RemoveEmptyEntries)
                     |> Seq.map int
-                    |> List.ofSeq
+                    |> Array.ofSeq
                 in
                 { pages = pages }
 
             member this.passesRule (rule : OrderingRule) : bool =
                 let maybeBeforeIdx = 
                     this.pages
-                    |> List.tryFindIndex ((=) rule.before) in
+                    |> Array.tryFindIndex ((=) rule.before) in
                 let maybeAfterIdx = 
                     this.pages 
-                    |> List.tryFindIndex ((=) rule.after) in
+                    |> Array.tryFindIndex ((=) rule.after) in
                 match maybeBeforeIdx, maybeAfterIdx with
                 | (Some beforeIdx, Some afterIdx) when beforeIdx > afterIdx -> false
                 | _ -> true
@@ -46,6 +46,30 @@ module Puzzle = begin
             member this.middle : int =
                 let target = (this.pages.Length / 2) in
                 this.pages[target]
+
+    let rec reorder (rules : OrderingRule seq) (update : PageUpdate) : PageUpdate =
+        let maybeFirstBrokenRule = 
+            rules 
+            |> Seq.tryFind (not << update.passesRule)
+        in
+        match maybeFirstBrokenRule with
+        | None -> update
+        | Some brokenRule -> 
+            let indexOfAfter = Array.IndexOf(update.pages, brokenRule.after) in
+            let lowestAllowableSpot = 
+                rules
+                |> Seq.filter (fun rule -> rule.after = brokenRule.after)
+                |> Seq.map _.before
+                |> Seq.map (fun before -> Array.IndexOf(update.pages, before))
+                |> Seq.filter (fun idx -> idx >= 0)
+                |> Seq.max
+                |> ((+) 1)
+            let reorderedPages = 
+                update.pages
+                |> Array.insertAt lowestAllowableSpot brokenRule.after
+                |> Array.removeAt indexOfAfter
+            in
+            reorder rules { pages = reorderedPages }
 
 
 
@@ -75,6 +99,11 @@ module Puzzle = begin
             sumBy (update.middle)
         }
 
-    let part2 (input: string seq) =
-        "the right answer"
+    let part2 (rules : OrderingRule seq) (updates : PageUpdate seq) =
+        query {
+            for update in updates do
+            where (not (update.isValid rules))
+            let reorderedUpdate = reorder rules update in
+            sumBy (reorderedUpdate.middle)
+        }
 end

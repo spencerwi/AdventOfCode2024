@@ -11,5 +11,5 @@ let main args =
     let input = read_stdin_lines() in
     let rules, updates = Puzzle.parseInput input in
     printfn "Part 1: %A" (Puzzle.part1 rules updates);
-    printfn "Part 2: %A" (Puzzle.part2 input);
+    printfn "Part 2: %A" (Puzzle.part2 rules updates);
     0

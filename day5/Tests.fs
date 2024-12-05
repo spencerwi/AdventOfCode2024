@@ -65,12 +65,12 @@ type ``Tests for solution`` ()=
             {after = 13; before = 53}
         }
         let expectedUpdates = seq {
-            { pages = [75;47;61;53;29] }
-            { pages = [97;61;53;29;13] }
-            { pages = [75;29;13] }
-            { pages = [75;97;47;61;53] }
-            { pages = [61;13;29] }
-            { pages = [97;13;75;29;47] }
+            { pages = [|75;47;61;53;29|] }
+            { pages = [|97;61;53;29;13|] }
+            { pages = [|75;29;13|] }
+            { pages = [|75;97;47;61;53|] }
+            { pages = [|61;13;29|] }
+            { pages = [|97;13;75;29;47|] }
         }
         parseInput sample_input
         |> should equal (
@@ -100,5 +100,6 @@ type ``Tests for solution`` ()=
 
     [<Test>]
     member this.``It should solve part 2`` ()=
-        part2 sample_input
-        |> should equal "the right answer"
+        let rules, updates = parseInput sample_input
+        part2 rules updates
+        |> should equal 123

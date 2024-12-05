@@ -33,16 +33,22 @@ module Puzzle = begin
         col : int
     } 
         with 
-            member this.step = 
-                function
-                | UP_LEFT -> { row = this.row - 1 ; col = this.col - 1 }
-                | UP -> { this with row = this.row - 1 }
-                | UP_RIGHT -> { row = this.row - 1 ; col = this.col + 1 }
-                | RIGHT -> { this with col = this.col + 1 }
-                | DOWN_RIGHT -> { row = this.row + 1 ; col = this.col + 1 }
-                | DOWN -> { this with row = this.row + 1 }
-                | DOWN_LEFT -> { row = this.row + 1 ; col = this.col - 1 }
-                | LEFT -> { this with col = this.col - 1 }
+            member this.apply ((rowDiff, colDiff)) =
+                {row = this.row + rowDiff; col = this.col + colDiff}
+
+            member this.step direction = 
+                let diff = 
+                    match direction with
+                    | UP_LEFT       -> (-1, -1)
+                    | UP            -> (-1,  0)
+                    | UP_RIGHT      -> (-1,  1)
+                    | RIGHT         -> ( 0,  1)
+                    | DOWN_RIGHT    -> ( 1,  1)
+                    | DOWN          -> ( 1,  0)
+                    | DOWN_LEFT     -> ( 1, -1)
+                    | LEFT          -> ( 0, -1)
+                in
+                this.apply diff
 
     type Grid = 
         { cells : char[,] }

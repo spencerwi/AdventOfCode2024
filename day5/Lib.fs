@@ -1,6 +1,9 @@
 module Lib
 open System
 
+let tryIndexOf (element : 'a) (sequence : 'a seq) : int option =
+    Seq.tryFindIndex ((=) element) sequence
+
 module Puzzle = begin
 
     type OrderingRule = {
@@ -28,17 +31,12 @@ module Puzzle = begin
                 { pages = pages }
 
             member this.passesRule (rule : OrderingRule) : bool =
-                let maybeBeforeIdx = 
-                    this.pages
-                    |> Array.tryFindIndex ((=) rule.before) in
-                let maybeAfterIdx = 
-                    this.pages 
-                    |> Array.tryFindIndex ((=) rule.after) in
+                let maybeBeforeIdx = tryIndexOf rule.before this.pages
+                let maybeAfterIdx = tryIndexOf rule.after this.pages
                 match maybeBeforeIdx, maybeAfterIdx with
                 | (Some beforeIdx, Some afterIdx) when beforeIdx > afterIdx -> false
                 | _ -> true
                 
-
             member this.isValid (rules : OrderingRule seq) : bool =
                 rules
                 |> Seq.forall (this.passesRule)
@@ -60,18 +58,22 @@ module Puzzle = begin
                 rules
                 |> Seq.filter (fun rule -> rule.after = brokenRule.after)
                 |> Seq.map _.before
-                |> Seq.map (fun before -> Array.IndexOf(update.pages, before))
-                |> Seq.filter (fun idx -> idx >= 0)
+                |> Seq.choose (fun before -> tryIndexOf before update.pages)
                 |> Seq.max
                 |> ((+) 1)
+            // Now we move the "after" to a safe spot, by first inserting it in
+            //  the new location, then removing it from the old location.
+            // We do it in that order because, if the rule is broken, it means
+            //  the "after" is actually before a "before", meaning that it needs
+            //  to be moved *forward* in the list.
+            // If we removed and then inserted, we'd be shifting our insert 
+            //  location.
             let reorderedPages = 
                 update.pages
                 |> Array.insertAt lowestAllowableSpot brokenRule.after
                 |> Array.removeAt indexOfAfter
             in
             reorder rules { pages = reorderedPages }
-
-
 
     let parseInput (input : string seq) : (OrderingRule seq * PageUpdate seq) =
         let rulesSection =

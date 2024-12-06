@@ -39,6 +39,13 @@ module Puzzle = begin
         member this.isEmptySpace p =
             not (this.obstacles.Contains p)
 
+        member this.withObstacleAt obstacleLocation =
+            if not (this.contains obstacleLocation) then
+                failwith $"Error: grid doesn't contain point {obstacleLocation}"
+            else
+                { this with obstacles = this.obstacles.Add obstacleLocation }
+
+
     type Guard = {
         location : Point
         facing : Direction
@@ -92,7 +99,7 @@ module Puzzle = begin
         | Exited of Set<Point>
         | Looped
 
-    let run (guard : Guard) (grid : Grid) =
+    let run (guard : Guard) (grid : Grid) : RunResult =
         let rec step' (seenStates : Set<Guard>) guard =
             if not (grid.contains guard.location) then
                 let uniqueSteps = 
@@ -108,11 +115,9 @@ module Puzzle = begin
         in
         step' Set.empty guard
 
-    let doesCauseLoop (guard : Guard) (grid : Grid) (newObstacleLocation : Point) = 
-        let gridWithObstacle = {
-            grid with obstacles = Set.add newObstacleLocation grid.obstacles
-        } in
-        match run guard gridWithObstacle with
+    let doesCauseLoop (guard : Guard) (grid : Grid) (newObstacleLocation : Point) : bool = 
+        let result = run guard (grid.withObstacleAt newObstacleLocation) in
+        match result with
         | Looped -> true
         | _ -> false
 

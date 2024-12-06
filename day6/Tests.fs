@@ -86,11 +86,6 @@ type ``Tests for solver methods`` ()=
     let (guard, grid) = parse sample_input in
 
     [<Test>]
-    member _.``It should solve part 1`` ()=
-        part1 guard grid
-        |> should equal 41
-
-    [<Test>]
-    member _.``It should solve part 2`` ()=
-        part2 guard grid
-        |> should equal 6
+    member _.``It should solve both parts`` ()=
+        solve guard grid
+        |> should equal (41, 6)

@@ -10,6 +10,7 @@ let read_stdin_lines () : string array =
 let main args =
     let input = read_stdin_lines() in
     let guard, grid = Puzzle.parse input
-    printfn "Part 1: %A" (Puzzle.part1 guard grid);
-    printfn "Part 2: %A" (Puzzle.part2 guard grid);
+    let part1, part2 = Puzzle.solve guard grid
+    printfn "Part 1: %A" part1;
+    printfn "Part 2: %A" part2;
     0

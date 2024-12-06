@@ -23,7 +23,7 @@ module Puzzle = begin
             | East, Left  | West, Right  -> North
             | West, Left  | East, Right  -> South
 
-        member this.asMovement = 
+        member this.asMovement() = 
             match this with
             | North -> (-1, 0)
             | South -> (1,  0)
@@ -43,13 +43,6 @@ module Puzzle = begin
         member this.isEmptySpace p =
             not (this.obstacles.Contains p)
 
-        member this.allPoints() : Point seq =
-            seq {
-                for row in 0 .. (this.height - 1) do
-                    for col in 0 .. (this.width - 1) do
-                        yield (row, col)
-            }
-
     type Guard = {
         location : Point
         facing : Direction
@@ -62,7 +55,7 @@ module Puzzle = begin
             }
             
         member this.spaceInFront = 
-            this.location ++ this.facing.asMovement
+            this.location ++ this.facing.asMovement()
 
         member this.tick (grid : Grid) : Guard =
             if grid.isEmptySpace this.spaceInFront then
@@ -120,18 +113,18 @@ module Puzzle = begin
         in
         step' Set.empty guard
 
-    let findLoopCausingObstaclePositions (guard : Guard) (grid : Grid) : Point list =
-        grid.allPoints()
-        |> Seq.filter ((<>) guard.location)
-        |> Seq.filter (not << grid.obstacles.Contains)
-        |> PSeq.filter (doesCauseLoop guard grid)
-        |> PSeq.toList
+    let solve (guard : Guard) (grid : Grid) =
+        let normalGuardPathSteps = runUntilGuardExit guard grid in
+        let part1 = Set.count normalGuardPathSteps in
+        // An obstacle placed in a spot the guard will never see doesn't affect the guard's path.
+        // That means we can cut down the number of points to check by only checking the guard's actual path.
+        let loopCausingPositions = 
+            normalGuardPathSteps
+            |> Seq.filter ((<>) guard.location) // don't check the start position
+            |> PSeq.filter (doesCauseLoop guard grid)
+        in
+        let part2 = PSeq.length loopCausingPositions in
+        (part1, part2)
 
-    let part1 (guard : Guard) (grid : Grid) =
-        runUntilGuardExit guard grid
-        |> Set.count 
 
-    let part2 (guard : Guard) (grid : Grid) =
-        findLoopCausingObstaclePositions guard grid
-        |> Seq.length
 end

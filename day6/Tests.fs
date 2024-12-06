@@ -57,23 +57,10 @@ type ``Guard tests`` ()=
         }
 
     [<Test>]
-    member _.``It should turn when it comes up to a wall ``() =
+    member _.``It should turn and continue in the new direction when it comes up to a wall ``() =
         // Run the guard up into the wall and confirm it turns
         let mutable current = guard in
         for _ in 1..6 do begin
-            current <- current.tick grid
-        end
-        current |> should equal {
-            location = (1, 4);
-            facing = East
-        }
-
-    [<Test>]
-    member _.``It should continue in the new direction after turning``() =
-        let (guard, grid) = parse sample_input in
-        // Run the guard up into the wall, have it turn, and have it move once more
-        let mutable current = guard in
-        for _ in 1..7 do begin
             current <- current.tick grid
         end
         current |> should equal {

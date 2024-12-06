@@ -53,11 +53,17 @@ module Puzzle = begin
         member this.spaceInFront = 
             this.location ++ this.facing.asMovement()
 
+        member this.spaceToTheRight =
+            this.location ++ this.facing.turn().asMovement()
+
         member this.tick (grid : Grid) : Guard =
             if grid.isEmptySpace this.spaceInFront then
                 { this with location = this.spaceInFront }
             else
-                { this with facing = this.facing.turn() }
+                { 
+                    location = this.spaceToTheRight
+                    facing = this.facing.turn()
+                }
 
     let parse (input : string seq) =
         let mutable guard = None in
@@ -91,8 +97,7 @@ module Puzzle = begin
             if not (grid.contains guard.location) then
                 let uniqueSteps = 
                     seenStates
-                    |> Seq.map _.location
-                    |> Set.ofSeq
+                    |> Set.map _.location
                 Exited uniqueSteps
             elif seenStates.Contains guard then
                 Looped

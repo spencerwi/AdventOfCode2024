@@ -3,12 +3,8 @@ open FSharp.Collections.ParallelSeq
 
 module Puzzle = begin
     type Point = int * int
-    let (++) ((row1, col1)) ((row2, col2)) : Point =
+    let (++) (row1, col1) (row2, col2) : Point =
         (row1 + row2, col1 + col2)
-
-    type Rotation =
-        | Left
-        | Right
 
     type Direction = 
         | North
@@ -16,12 +12,12 @@ module Puzzle = begin
         | West
         | South
     with 
-        member this.turn rotation =
-            match (this, rotation) with
-            | North, Left | South, Right -> West
-            | South, Left | North, Right -> East
-            | East, Left  | West, Right  -> North
-            | West, Left  | East, Right  -> South
+        member this.turn() =
+            match this with
+            | South -> West
+            | North -> East
+            | West  -> North
+            | East  -> South
 
         member this.asMovement() = 
             match this with
@@ -61,7 +57,7 @@ module Puzzle = begin
             if grid.isEmptySpace this.spaceInFront then
                 { this with location = this.spaceInFront }
             else
-                { this with facing = this.facing.turn Right }
+                { this with facing = this.facing.turn() }
 
     let parse (input : string seq) =
         let mutable guard = None in

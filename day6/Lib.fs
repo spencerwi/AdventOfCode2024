@@ -82,40 +82,42 @@ module Puzzle = begin
         } in
         (Option.get guard, grid)
 
-    let runUntilGuardExit (guard : Guard) (grid : Grid) =
-        let rec step' steps guard =
+    type RunResult = 
+        | Exited of Set<Point>
+        | Looped
+
+    let run (guard : Guard) (grid : Grid) =
+        let rec step' (seenStates : Set<Guard>) guard =
             if not (grid.contains guard.location) then
-                steps
+                let uniqueSteps = 
+                    seenStates
+                    |> Seq.map _.location
+                    |> Set.ofSeq
+                Exited uniqueSteps
+            elif seenStates.Contains guard then
+                Looped
             else
                 let newGuard = guard.tick grid in
-                let newSteps = Set.add guard.location steps in
-                step' newSteps newGuard
+                let newSeenStates = Set.add guard seenStates in
+                step' newSeenStates newGuard
         in
-        step' (Set.singleton guard.location) guard
+        step' Set.empty guard
 
     let doesCauseLoop (guard : Guard) (grid : Grid) (newObstacleLocation : Point) = 
         let gridWithObstacle = {
             grid with obstacles = Set.add newObstacleLocation grid.obstacles
         } in
-        let rec step' (seenStates : Set<Guard>) (guard : Guard) =
-            if not (gridWithObstacle.contains guard.location) then
-                false
-            elif seenStates.Contains guard then
-                true
-            else
-                let newGuard = guard.tick gridWithObstacle in
-                let newStates = Set.add guard seenStates in
-                step' newStates newGuard
-        in
-        step' Set.empty guard
+        match run guard gridWithObstacle with
+        | Looped -> true
+        | _ -> false
 
     let solve (guard : Guard) (grid : Grid) =
-        let normalGuardPathSteps = runUntilGuardExit guard grid in
-        let part1 = Set.count normalGuardPathSteps in
+        let (Exited normalGuardPath) = run guard grid in
+        let part1 = Set.count normalGuardPath in
         // An obstacle placed in a spot the guard will never see doesn't affect the guard's path.
         // That means we can cut down the number of points to check by only checking the guard's actual path.
         let loopCausingPositions = 
-            normalGuardPathSteps
+            normalGuardPath
             |> Seq.filter ((<>) guard.location) // don't check the start position
             |> PSeq.filter (doesCauseLoop guard grid)
         in

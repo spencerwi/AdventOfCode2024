@@ -46,10 +46,10 @@ type ``Parsing tests`` ()=
 
 [<TestFixture>]
 type ``Guard tests`` ()=
+    let (guard, grid) = parse sample_input in
 
     [<Test>]
     member _.``It should step forward into an empty space`` ()=
-        let (guard, grid) = parse sample_input in
         guard.tick grid
         |> should equal {
             location = (5, 4);
@@ -58,7 +58,6 @@ type ``Guard tests`` ()=
 
     [<Test>]
     member _.``It should turn when it comes up to a wall ``() =
-        let (guard, grid) = parse sample_input in
         // Run the guard up into the wall and confirm it turns
         let mutable current = guard in
         for _ in 1..6 do begin
@@ -82,12 +81,16 @@ type ``Guard tests`` ()=
             facing = East
         }
 
+[<TestFixture>]
+type ``Tests for solver methods`` ()=
+    let (guard, grid) = parse sample_input in
+
     [<Test>]
     member _.``It should solve part 1`` ()=
-        part1 sample_input
+        part1 guard grid
         |> should equal 41
 
     [<Test>]
     member _.``It should solve part 2`` ()=
-        part2 sample_input
-        |> should equal "the right answer"
+        part2 guard grid
+        |> should equal 6

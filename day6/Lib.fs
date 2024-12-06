@@ -1,4 +1,5 @@
 module Lib
+open FSharp.Collections.ParallelSeq
 
 module Puzzle = begin
     type Point = int * int
@@ -41,6 +42,13 @@ module Puzzle = begin
 
         member this.isEmptySpace p =
             not (this.obstacles.Contains p)
+
+        member this.allPoints() : Point seq =
+            seq {
+                for row in 0 .. (this.height - 1) do
+                    for col in 0 .. (this.width - 1) do
+                        yield (row, col)
+            }
 
     type Guard = {
         location : Point
@@ -96,11 +104,34 @@ module Puzzle = begin
         in
         step' (Set.singleton guard.location) guard
 
-    let part1 (input: string seq) =
-        let guard, grid = parse input in
+    let doesCauseLoop (guard : Guard) (grid : Grid) (newObstacleLocation : Point) = 
+        let gridWithObstacle = {
+            grid with obstacles = Set.add newObstacleLocation grid.obstacles
+        } in
+        let rec step' (seenStates : Set<Guard>) (guard : Guard) =
+            if not (gridWithObstacle.contains guard.location) then
+                false
+            elif seenStates.Contains guard then
+                true
+            else
+                let newGuard = guard.tick gridWithObstacle in
+                let newStates = Set.add guard seenStates in
+                step' newStates newGuard
+        in
+        step' Set.empty guard
+
+    let findLoopCausingObstaclePositions (guard : Guard) (grid : Grid) : Point list =
+        grid.allPoints()
+        |> Seq.filter ((<>) guard.location)
+        |> Seq.filter (not << grid.obstacles.Contains)
+        |> PSeq.filter (doesCauseLoop guard grid)
+        |> PSeq.toList
+
+    let part1 (guard : Guard) (grid : Grid) =
         runUntilGuardExit guard grid
         |> Set.count 
 
-    let part2 (input: string seq) =
-        "the right answer"
+    let part2 (guard : Guard) (grid : Grid) =
+        findLoopCausingObstaclePositions guard grid
+        |> Seq.length
 end

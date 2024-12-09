@@ -24,7 +24,7 @@ let sample_input = sample_input_raw.Trim().Split "\n"
 [<TestFixture>]
 type ``Parsing tests`` ()=
     [<Test>]
-    member this.``It should parse the input map properly`` ()=
+    member _.``It should parse the input map properly`` ()=
         BroadcastMap.parse sample_input
         |> should equal {
             width = 12
@@ -40,7 +40,7 @@ type ``Tests for solution`` ()=
     let broadcastMap = BroadcastMap.parse sample_input
 
     [<Test>]
-    member _.``It should find antinodes properly`` ()=
+    member _.``It should find antinodes properly using the Part1 rule`` ()=
         let antinodeSampleMap = 
             BroadcastMap.parse [|
                 ".........."
@@ -55,8 +55,18 @@ type ``Tests for solution`` ()=
                 ".........."
             |]
             in
-            antinodeSampleMap.antinodesFor 'a'
+            antinodeSampleMap.antinodesFor Part1 'a'
             |> should equivalent antinodeSampleMap.antennas['#']
+
+    [<Test>]
+    member _.``It can find colinear points within a map`` ()=
+        broadcastMap.colinearPoints (1, 1) (3, 3) 
+        |> should equivalent [
+            (0, 0); (1, 1); (2, 2); (3, 3); (4, 4);
+            (5, 5); (6, 6); (7, 7); (8, 8); (9, 9);
+            (10, 10); (11, 11)
+        ]
+
     [<Test>]
     member _.``It should solve part 1`` ()=
         part1 broadcastMap
@@ -64,5 +74,5 @@ type ``Tests for solution`` ()=
 
     [<Test>]
     member _.``It should solve part 2`` ()=
-        part2 sample_input
-        |> should equal "the right answer"
+        part2 broadcastMap
+        |> should equal 34

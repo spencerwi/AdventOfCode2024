@@ -11,5 +11,5 @@ let main args =
     let input = read_stdin_lines() in
     let broadcastMap = Puzzle.BroadcastMap.parse input in
     printfn "Part 1: %A" (Puzzle.part1 broadcastMap);
-    printfn "Part 2: %A" (Puzzle.part2 input);
+    printfn "Part 2: %A" (Puzzle.part2 broadcastMap);
     0

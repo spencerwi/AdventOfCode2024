@@ -7,6 +7,28 @@ module Puzzle = begin
     let (--) (row2, col2) (row1, col1) =
         (row2 - row1, col2 - col1)
 
+    let allPairings input =
+        input 
+        |> Seq.mapi (fun i x -> 
+            input 
+            |> Seq.skip (i + 1) 
+            |> Seq.map (fun y -> (x, y))
+        )
+        |> Seq.concat
+
+    let rec greatestCommonDivisor a b =
+        if b = 0 then abs a
+        else greatestCommonDivisor b (a % b)
+
+    let simplify (row, col) =
+        let gcd = greatestCommonDivisor row col
+        (row / gcd, col / gcd)
+        
+
+    type AntinodesType = 
+        | Part1
+        | Part2
+
     type BroadcastMap = {
         antennas : Map<char, Point list>
         width : int
@@ -50,33 +72,50 @@ module Puzzle = begin
             ]
             |> Seq.filter this.contains
 
-        member this.antinodesFor (c : char) : Point seq =
+        member this.colinearPoints p1 p2 : Point seq =
+            let diff = simplify (p2 -- p1) in
+            seq {
+                yield! seq {
+                    let mutable current = p1 -- diff in
+                    while this.contains current do
+                        yield current
+                        current <- current -- diff
+                }
+                yield p1
+                yield! seq {
+                    let mutable current = p1 ++ diff in
+                    while this.contains current do
+                        yield current
+                        current <- current ++ diff
+                }
+            }
+
+        member this.antinodesFor (antinodesType : AntinodesType) (c : char) : Point seq =
+            let antinodeFinder = 
+                match antinodesType with
+                | Part1 -> (fun (a, b) -> this.antinodes a b)
+                | Part2 -> (fun (a, b) -> this.colinearPoints a b)
+            in
             match this.antennas.TryFind c with
             | None -> Seq.empty
             | Some [_] -> Seq.empty
             | Some points ->
                 points
-                |> Seq.allPairs points
-                |> Seq.filter (fun (a, b) -> a <> b)
-                |> Seq.distinctBy (fun (a, b) -> 
-                    List.sort [a; b]
-                )
-                |> Seq.collect (fun (p1, p2) -> 
-                    this.antinodes p1 p2 
-                )
+                |> allPairings
+                |> Seq.collect antinodeFinder
                 |> Seq.filter this.contains
         
-        member this.allAntinodes() : Point seq =
+        member this.allAntinodes antinodesType : Set<Point> =
             seq {
                 for freq in this.antennas.Keys do 
-                    yield! this.antinodesFor freq
-            }
+                    yield! this.antinodesFor antinodesType freq
+            } |> Set.ofSeq
 
     let part1 (broadcastMap : BroadcastMap) =
-        broadcastMap.allAntinodes()
-        |> Set.ofSeq
+        broadcastMap.allAntinodes Part1
         |> Set.count
 
-    let part2 (input: string seq) =
-        "the right answer"
+    let part2 (broadcastMap : BroadcastMap) =
+        broadcastMap.allAntinodes Part2
+        |> Set.count
 end

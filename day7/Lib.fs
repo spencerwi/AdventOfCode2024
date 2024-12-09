@@ -3,6 +3,15 @@ open System
 
 module Puzzle = begin
 
+    type OperationSet =
+        | Part1 
+        | Part2 
+    with 
+        member this.apply a b =
+            match this with
+            | Part1 -> [ a + b; a * b ]
+            | Part2 -> [ a + b; a * b; int64 (string a + string b)]
+
     type Equation = {
         testValue : int64
         numbers : int64 list
@@ -18,49 +27,31 @@ module Puzzle = begin
                     numbers = List.map int64 numbersStrs 
                 }
 
-            member this.isValid =
+            member this.isValid (ops : OperationSet) =
                 let rec check' = 
                     function
                     | [] -> false
                     | [_] -> false
                     | a::b::rest ->
-                        let product = a * b in
-                        let sum = a + b in
+                        let candidates = ops.apply a b in
                         if rest.IsEmpty then
-                            (this.testValue = product) || (this.testValue = sum) 
+                            candidates
+                            |> Seq.contains this.testValue
                         else 
-                            check' (product::rest) || check' (sum::rest)
-                in
-                check' this.numbers
-
-            member this.isValidWithConcat =
-                let rec check' = 
-                    function
-                    | [] -> false
-                    | [_] -> false
-                    | a::b::rest ->
-                        let product = a * b in
-                        let sum = a + b in
-                        let concatenated = int64 (string a + string b) in
-                        if rest.IsEmpty then 
-                            (this.testValue = product) || 
-                            (this.testValue = sum) || 
-                            (this.testValue = concatenated)
-                        else
-                            check' (product::rest) || 
-                            check' (sum::rest) || 
-                            check' (concatenated::rest)
+                            candidates 
+                            |> Seq.map (fun c -> c::rest)
+                            |> Seq.exists check'
                 in
                 check' this.numbers
 
     let part1 (equations: Equation seq) =
         equations
-        |> Seq.filter _.isValid
+        |> Seq.filter (fun e -> e.isValid Part1)
         |> Seq.sumBy _.testValue
 
 
     let part2 (equations: Equation seq) =
         equations
-        |> Seq.filter _.isValidWithConcat
+        |> Seq.filter (fun e -> e.isValid Part2)
         |> Seq.sumBy _.testValue
 end

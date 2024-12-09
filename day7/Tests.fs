@@ -43,7 +43,7 @@ type ``Tests for solution`` ()=
     [<Test>]
     member _.``It can check equations properly without concatenation`` ()=
         equations
-        |> Seq.filter _.isValid
+        |> Seq.filter (fun e -> e.isValid Part1)
         |> should equalSeq [
             { testValue = 190; numbers = [10; 19] }
             { testValue = 3267; numbers = [81; 40; 27] }
@@ -53,7 +53,7 @@ type ``Tests for solution`` ()=
     [<Test>]
     member _.``It can check equations properly with concatenation`` ()=
         equations
-        |> Seq.filter _.isValidWithConcat
+        |> Seq.filter (fun e -> e.isValid Part2)
         |> should equalSeq [
             { testValue = 190; numbers = [10; 19] }
             { testValue = 3267; numbers = [81; 40; 27] }

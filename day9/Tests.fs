@@ -63,26 +63,38 @@ type ``Tests for stringification`` ()=
         |> should equal "0.1.2.3.4.5.6.7.8.9.:."
 
 [<TestFixture>]
-type ``Tests for solution`` ()=
+type ``Tests for compaction`` ()=
     let diskMap = Parsing.parseDiskMap sample_input
+    let twoDigitFileDiskMap = Parsing.parseDiskMap (String.replicate 11 "11")
+
     [<Test>]
-    member _.``It compacts a DiskMap correctly`` ()=
-        compact diskMap
+    member _.``It blockwise-compacts a DiskMap correctly`` ()=
+        compactBlockwise diskMap
         |> should equal "0099811188827773336446555566.............."
 
     [<Test>]
-    member _.``It compacts a DiskMap with >10 files correctly`` ()=
-        (String.replicate 11 "11")
-        |> Parsing.parseDiskMap 
-        |> compact 
+    member _.``It blockwise-compacts a DiskMap with >10 files correctly`` ()=
+        twoDigitFileDiskMap
+        |> compactBlockwise 
         |> should equal "0:192837465..........."
 
     [<Test>]
-    member this.``It should solve part 1`` ()=
+    member _.``It filewise-compacts a DiskMap correctly`` ()= 
+        compactFilewise diskMap
+        |> diskMapToString
+        |> should equal "00992111777.44.333....5555.6666.....8888.."
+
+
+[<TestFixture>]
+type ``Tests for solution`` ()=
+    let diskMap = Parsing.parseDiskMap sample_input
+
+    [<Test>]
+    member _.``It should solve part 1`` ()=
         part1 diskMap
         |> should equal 1928
 
     [<Test>]
-    member this.``It should solve part 2`` ()=
-        part2 sample_input
-        |> should equal "the right answer"
+    member _.``It should solve part 2`` ()=
+        part2 diskMap
+        |> should equal 2858

@@ -11,5 +11,5 @@ let main args =
     let input = read_stdin_lines()[0] in
     let diskMap = Puzzle.Parsing.parseDiskMap input in
     printfn "Part 1: %A" (Puzzle.part1 diskMap);
-    printfn "Part 2: %A" (Puzzle.part2 input);
+    printfn "Part 2: %A" (Puzzle.part2 diskMap);
     0

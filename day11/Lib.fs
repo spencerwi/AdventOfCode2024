@@ -42,7 +42,7 @@ module Puzzle = begin
             this.setCount stone ((this.getCount stone) + increment)
 
         member this.decrementBy (stone : Stone) (decrement : int64) =
-            if (this.getCount stone) = decrement then
+            if (this.getCount stone) <= decrement then
                 this.stoneCounts <- this.stoneCounts.Remove stone
             else
                 this.setCount stone ((this.getCount stone) - decrement)

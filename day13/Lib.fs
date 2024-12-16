@@ -45,9 +45,6 @@ module Puzzle = begin
                 prizeLocation = prizeLocation
             }
 
-        member this.aCost = 3L
-        member this.bCost = 1L
-
         member this.minimumCost (adjustment : int64) : int64 option =
              // equation 1: i(aDx) + j(bDx) = prizeX
              // equation 2: i(aDy) + j(bDy) = prizeY

@@ -72,12 +72,14 @@ type ``Computer tests`` ()=
 
 [<TestFixture>]
 type ``Tests for solution`` ()=
+    let computer = Computer.parse sample_input
+
     [<Test>]
     member _.``It should solve part 1`` ()=
-        part1 sample_input
+        part1 computer
         |> should equal "4,6,3,5,6,3,5,2,1,0"
 
     [<Test>]
     member _.``It should solve part 2`` ()=
-        part2 sample_input
-        |> should equal "the right answer"
+        part2 computer
+        |> should equal 117440

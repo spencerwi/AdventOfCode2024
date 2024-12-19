@@ -1,6 +1,15 @@
 module Lib
 open System
 open System.Text.RegularExpressions
+open FSharp.Collections.ParallelSeq
+
+let rec isPrefixOf possiblePrefix lst =
+    match possiblePrefix, lst with
+    | [], [] -> false
+    | [], _ -> true
+    | _::_, [] -> false
+    | nextA::_, nextB::_ when nextA <> nextB -> false
+    | _::restA, _::restB -> restA |> isPrefixOf <| restB
 
 module Puzzle = begin
     type OpCode =
@@ -118,21 +127,37 @@ module Puzzle = begin
                     Some (this.eval opcode operand)
 
             member this.run() : Computer * (int list) =
-                let currentState = this in
-                let rec step (computer : Computer) =  
+                let rec step' (computer : Computer) =  
                     match computer.step() with
                     | None -> (computer, computer.outputs)
-                    | Some next -> step next
-                in
-                step currentState
+                    | Some next -> step' next
+                in step' this
 
-    let part1 (input: string array) =
-        Computer.parse input 
-        |> _.run()
+            member this.outputsProgram() : bool =
+                let mutable seenStates = Set.singleton this in
+                let rec step' (computer : Computer) =
+                    match computer.step() with
+                    | Some next when seenStates.Contains next -> false // it loops
+                    | Some next when (next.outputs = List.ofArray next.program) -> true
+                    | Some next when (next.outputs |> isPrefixOf <| List.ofArray next.program) -> 
+                        seenStates <- seenStates.Add next; 
+                        step' next
+                    | _ -> false
+                in step' this
+
+    let part1 (computer : Computer) =
+        computer.run()
         |> snd
         |> Seq.map string
         |> String.concat ","
 
-    let part2 (input: string seq) =
-        "the right answer"
+    let part2 (computer : Computer) =
+        seq {
+            for i in 0..Int32.MaxValue do
+                if i <> computer.a then
+                    yield {computer with a = i}
+        }
+        |> PSeq.filter _.outputsProgram()
+        |> PSeq.map _.a
+        |> PSeq.min
 end

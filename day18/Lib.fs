@@ -49,12 +49,15 @@ module Puzzle = begin
             |> Seq.filter this.contains
             |> Seq.filter (not << this.hasWallAt)
 
+        member this.clone() =
+            { walls = this.walls; width = this.width; height = this.height }
+
     let shortestPathToExit (grid : Grid) : int =
         let goal = (grid.width - 1, grid.height - 1) in
         /// Dijkstra's algorithm again
         
         let initialLocation = (0, 0) in
-        // We'll keep track of how far each point in the grid is from the source by using a separate grid of the same size
+        // We'll keep track of how far each point in the grid is from the source 
         let mutable distancesFromSource = Map.ofList [(initialLocation, 0)] in
         let getDistance location = 
             if distancesFromSource.ContainsKey location then
